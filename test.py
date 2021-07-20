@@ -23,8 +23,10 @@ def kp_info(url):
 	soup = BeautifulSoup(response.content, "html.parser")
 
 	quotes = soup.find_all('div', class_='styles_rowLight__3uy9z styles_row__2ee6F')
+	if quotes == []:
+		quotes = soup.find_all('div', class_="styles_rowDark__2qC4I styles_row__2ee6F")
 	release_year = (quotes[0].contents)[1].text
-	runtime = (quotes[22].contents)[1].text
+	runtime = (quotes[len(quotes)-1].contents)[1].text
 	genre = []
 	genres = (quotes[2].contents)[1].contents[0].contents
 	for i in range(0,len(genres),2):
@@ -42,7 +44,10 @@ def kp_info(url):
 	rating_kp = (quotes3[0].contents)[0].text
 
 	quotes4 = soup.find_all('div', class_='styles_filmSynopsis__zLClu')
-	storyline = quotes4[0].text
+	if quotes4 == []:
+		storyline = '-'
+	else:
+		storyline = quotes4[0].text
 
 	quotes5 = soup.find_all('div', class_="styles_actors__2zt1j")
 	actor = []
@@ -51,10 +56,6 @@ def kp_info(url):
 		actor.append(actors[i].text)
 
 	print_info(ru_name,eng_name,release_year,country,producer,runtime,genre,rating_kp,actor,storyline)
-
-
-
-
 
 def main(url):
 	kp_info(url)
