@@ -16,6 +16,8 @@ def kp_info(url):
 	response = requests.get(url, headers = headers)
 	if response.status_code == 200:
 		print("-- everything is ok with the request for kinopoisk --")
+	elif response.status_code == 404:
+		print('-- not found --')
 	else:
 		print("-- something is wrong --",response.status_code)
 	
@@ -77,14 +79,58 @@ def imdb_info(url):
 	rating_imdb = (quotes[0].contents)[0].contents[0].text
 	return rating_imdb
 
-def main(url_k, url_i):
-	ru_name,eng_name,release_year,country,producer,runtime,genre,rating_kp,actor,storyline = kp_info(url_k)
-	rating_imdb = imdb_info(url_i)
+def find_url_kp(name):
+	words = name.split()
+	name_like_url = words[0]
+	for i in range(1,len(words)):
+		name_like_url = str(name_like_url) + '+' + str(words[i])
+	url = 'https://www.kinopoisk.ru/index.php?kp_query=' + str(name_like_url)
+
+	response = requests.get(url, headers = headers)
+	if response.status_code == 200:
+		print("-- everything is ok with the request for kinopoisk --")
+	elif response.status_code == 404:
+		print('-- not found --')
+	else:
+		print("-- something is wrong --",response.status_code)
+	
+	soup = BeautifulSoup(response.content, "html.parser")
+
+	quotes = soup.find_all('p', class_='name')
+	id_kp = quotes[0].contents[0].get('data-url')
+	url_kp =  'https://www.kinopoisk.ru' + str(id_kp)
+	return url_kp
+
+def find_url_imdb(name):
+	words = name.split()
+	name_like_url = words[0]
+	for i in range(1,len(words)):
+		name_like_url = str(name_like_url) + '+' + str(words[i])
+	url = 'https://www.imdb.com/find?q=' + str(name_like_url) + '&ref_=nv_sr_sm'
+	response = requests.get(url, headers = headers)
+	if response.status_code == 200:
+		print("-- everything is ok with the request for IMDb --")
+	elif response.status_code == 404:
+		print('-- not found --')
+	else:
+		print("-- something is wrong --",response.status_code)
+	
+	soup = BeautifulSoup(response.content, "html.parser")
+
+	quotes = soup.find_all('table', class_='findList')
+	quotes_cool = quotes[0].contents[1].contents[1].contents[1]
+	id_imdb = quotes_cool.get('href')
+	url_imdb =  'https://www.imdb.com' + str(id_imdb)
+	return url_imdb
+
+def main(name):
+	url_kp = find_url_kp(name)
+	ru_name,eng_name,release_year,country,producer,runtime,genre,rating_kp,actor,storyline = kp_info(url_kp)
+	url_imdb = find_url_imdb(eng_name)
+	rating_imdb = imdb_info(url_imdb)
+
 	print_info(ru_name,eng_name,release_year,country,producer,runtime,genre,rating_kp,rating_imdb,actor,storyline)
 
-
 if __name__ == '__main__':
-	# url_k = 'https://www.kinopoisk.ru/film/61333/'
-	url_i = 'https://www.imdb.com/title/tt0368891/?ref_=nv_sr_srsg_0'
-	url_k = 'https://www.kinopoisk.ru/film/265188/'
-	main(url_k, url_i)
+	name = ''
+	main(name)
