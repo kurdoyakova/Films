@@ -11,23 +11,34 @@ Chrome/88.0.4324.150 Safari/537.36",
 
 class Film():
     """Class for describing film info"""
-    def __init__(self, genres=None):
-        if genres:
-            self.genres = genres
-        else:
-            self.genres = []
+    def __init__(self):
+        self.type_genre = 'фильм'
+        self.release_year = ''
+        self.ru_name = ''
+        self.eng_name = ''
+        self.rating_kp = ''
+        self.rating_imdb = ''
+        self.runtime = ''
+        self.genre = []
+        self.country = []
+        self.producer = []
+        self.storyline = ''
+        self.actor = []
 
     def __repr__(self):
-        repr_str = 'Genres: ' + ', '.join(self.genres)
-        return repr_str
+        attributes = self.__dict__
+        table = []
+        for k, v in attributes.items():
+            table.append([str(k), v])
+        return tabulate(table, tablefmt="plain")
 
 
-def print_info(**kwargs):
-    """printing information in the table"""
-    table = []
-    for k, v in kwargs.items():
-        table.append([str(k), v])
-    print(tabulate(table, tablefmt="plain"))
+class Serial(Film):
+    """Class for describing serial info"""
+    def __init__(self):
+        super().__init__()
+        self.type_genre = 'сериал'
+        self.number_of_seasons = ''
 
 
 def resnonse_url(url):
@@ -58,6 +69,7 @@ def kp_type(url):
 
 def kp_info_film(soup):
     """getting basic information about a movie on the kinopoisk"""
+    film = Film()
     quotes = soup.find_all(
         'div', class_="styles_rowDark__2qC4I styles_row__2ee6F")
     if quotes == []:
@@ -68,52 +80,48 @@ def kp_info_film(soup):
     quotes4 = soup.find_all('div', class_='styles_filmSynopsis__zLClu')
     quotes5 = soup.find_all('div', class_="styles_actors__2zt1j")
 
-    release_year = (quotes[0].contents)[1].text
+    film.release_year = (quotes[0].contents)[1].text
     ru_name_with_year = (quotes2[0].contents)[0].contents[0].text
-    ru_name = ru_name_with_year[:len(ru_name_with_year)-6]
-    eng_name = (quotes2[0].contents)[1].contents[0].text
-    rating_kp = (quotes3[0].contents)[0].text
+    film.ru_name = ru_name_with_year[:len(ru_name_with_year)-6]
+    film.eng_name = (quotes2[0].contents)[1].contents[0].text
+    film.rating_kp = (quotes3[0].contents)[0].text
 
     runtime_full = (quotes[len(quotes)-1].contents)[1].text
     for i in runtime_full:
         if i == '/':
-            runtime = runtime_full[len(runtime_full)-6:len(runtime_full)]
+            film.runtime = runtime_full[len(runtime_full)-6:len(runtime_full)]
             break
-        runtime = runtime_full[0:len(runtime_full)-1]
+        film.runtime = runtime_full[0:len(runtime_full)-1]
 
-    genre = []
     genres = (quotes[2].contents)[1].contents[0].contents
     for i in range(0, len(genres), 2):
-        genre.append(genres[i].text)
+        film.genre.append(genres[i].text)
 
-    country = []
     countrys = quotes[1].contents[1].contents
     for i in range(0, len(countrys), 2):
-        country.append(countrys[i].text)
+        film.country.append(countrys[i].text)
 
-    producer = []
     producers = (quotes[4].contents)[1].contents
     for i in range(0, len(producers), 2):
         if producers[i].text == '...':
             break
-        producer.append(producers[i].text)
+        film.producer.append(producers[i].text)
 
     if quotes4 == []:
-        storyline = '-'
+        film.storyline = '-'
     else:
-        storyline = quotes4[0].text
+        film.storyline = quotes4[0].text
 
-    actor = []
     actors = (quotes5[0].contents)[1].contents
     for i, _ in enumerate(actors):
-        actor.append(actors[i].text)
+        film.actor.append(actors[i].text)
 
-    return ru_name, eng_name, release_year, country,\
-        producer, runtime, genre, rating_kp, actor, storyline
+    return film
 
 
 def kp_info_serial(soup):
     """getting basic information about the series on the kinopoisk"""
+    serial = Serial()
     quotes = soup.find_all(
         'div', class_="styles_rowDark__2qC4I styles_row__2ee6F")
     if quotes == []:
@@ -125,44 +133,43 @@ def kp_info_serial(soup):
     quotes5 = soup.find_all('div', class_="styles_actors__2zt1j")
 
     release_year_with_number_of_seasons = (quotes[0].contents)[1].text
-    release_year = release_year_with_number_of_seasons[0:4]
-    number_of_seasons = release_year_with_number_of_seasons[6:7]
-    ru_name = (quotes2[0].contents)[0].contents[0].text
-    eng_name = (quotes2[0].contents)[1].contents[0].text
-    country = (quotes[1].contents)[1].text
-    rating_kp = (quotes3[0].contents)[0].text
+    serial.release_year = release_year_with_number_of_seasons[0:4]
+    serial.number_of_seasons = release_year_with_number_of_seasons[6:7]
+    serial.ru_name = (quotes2[0].contents)[0].contents[0].text
+    serial.eng_name = (quotes2[0].contents)[1].contents[0].text
+    serial.rating_kp = (quotes3[0].contents)[0].text
 
     runtime_full = (quotes[len(quotes)-1].contents)[1].text
     for i in runtime_full:
         if i == '/':
-            runtime = runtime_full[len(runtime_full)-6:len(runtime_full)]
+            serial.runtime = runtime_full[len(runtime_full)-6:len(runtime_full)]
             break
-        runtime = runtime_full[0:len(runtime_full)-1]
+        serial.runtime = runtime_full[0:len(runtime_full)-1]
 
-    genre = []
+    countrys = quotes[1].contents[1].contents
+    for i in range(0, len(countrys), 2):
+        serial.country.append(countrys[i].text)
+
     genres = (quotes[2].contents)[1].contents[0].contents
     for i in range(0, len(genres), 2):
-        genre.append(genres[i].text)
+        serial.genre.append(genres[i].text)
 
-    producer = []
     producers = (quotes[4].contents)[1].contents
     for i in range(0, len(producers), 2):
         if producers[i].text == '...':
             break
-        producer.append(producers[i].text)
+        serial.producer.append(producers[i].text)
 
     if quotes4 == []:
-        storyline = '-'
+        serial.storyline = '-'
     else:
-        storyline = quotes4[0].text
+        serial.storyline = quotes4[0].text
 
-    actor = []
     actors = (quotes5[0].contents)[1].contents
     for i, _ in enumerate(actors):
-        actor.append(actors[i].text)
+        serial.actor.append(actors[i].text)
 
-    return number_of_seasons, ru_name, eng_name, release_year, country,\
-        producer, runtime, genre, rating_kp, actor, storyline
+    return serial
 
 
 def imdb_info(url):
@@ -209,29 +216,15 @@ def main(name):
     url_kp = find_url_kp(name)
     type_genre, soup = kp_type(url_kp)
     if type_genre == 'фильм':
-        # film = Film()
-        ru_name, eng_name, release_year, country, producer, runtime, genre,\
-            rating_kp, actor, storyline = kp_info_film(soup)
-
-        url_imdb = find_url_imdb(eng_name)
-        rating_imdb = imdb_info(url_imdb)
-        print_info(type=type_genre, ru_name=ru_name,
-                   eng_name=eng_name, release_year=release_year,
-                   country=country, producer=producer, runtime=runtime,
-                   genre=genre, rating_kp=rating_kp,
-                   rating_imdb=rating_imdb, actor=actor,
-                   storyline=storyline)
+        film = kp_info_film(soup)
+        url_imdb = find_url_imdb(film.eng_name)
+        film.rating_imdb = imdb_info(url_imdb)
+        print(film)
     else:
-        number_of_seasons, ru_name, eng_name, release_year, country, producer,\
-            runtime, genre, rating_kp, actor, storyline = kp_info_serial(soup)
-        url_imdb = find_url_imdb(eng_name)
-        rating_imdb = imdb_info(url_imdb)
-        print_info(type=type_genre, number_of_seasons=number_of_seasons,
-                   ru_name=ru_name, eng_name=eng_name,
-                   release_year=release_year, country=country,
-                   producer=producer, runtime=runtime, genre=genre,
-                   rating_kp=rating_kp, rating_imdb=rating_imdb,
-                   actor=actor, storyline=storyline)
+        serial = kp_info_serial(soup)
+        url_imdb = find_url_imdb(serial.eng_name)
+        serial.rating_imdb = imdb_info(url_imdb)
+        print(serial)
 
 
 if __name__ == '__main__':
