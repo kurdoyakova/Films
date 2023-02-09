@@ -21,8 +21,8 @@ def sql_connection():
         raise e
 
 type_genre = 'фильм'
-ru_name = 'дод'
-eng_name = 'lol'
+ru_name = 'Начало'
+eng_name = 'Inception'
 release_year = 1998
 country = ['США', 'Мексика']
 producer = ['Джон Хьюстон']
